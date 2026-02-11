@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Keyword Studio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="background-bubbles"></div>
+
+<div class="wrapper">
+    <div class="card">
+        <h1 class="title">Keyword Studio</h1>
+        <p class="subtitle">Transform your text into smart keywords instantly</p>
+
+        <form method="POST" id="keywordForm">
+            <textarea id="textInput" name="text" placeholder="Type your text here..." rows="7"></textarea>
+
+            <div class="button-group">
+                <button type="submit">Extract</button>
+                <button type="button" class="clear-btn" onclick="clearText()">Clear</button>
+            </div>
+        </form>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+
+        {% if error %}
+            <div class="error-box">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if keywords %}
+            <div class="result-box">
+                <h2>Extracted Keywords</h2>
+                <ul>
+                    {% for keyword in keywords %}
+                        <li>{{ keyword }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <script>
+                document.getElementById("progressBar").style.width = "100%";
+                document.getElementById("progressText").innerText = "Processed ✓";
+            </script>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("keywordForm");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    form.addEventListener("submit", function() {
+        progressBar.style.width = "0%";
+        progressText.innerText = "Processing...";
+        let width = 0;
+
+        const interval = setInterval(function() {
+            if (width >= 90) {
+                clearInterval(interval);
+            } else {
+                width += 10;
+                progressBar.style.width = width + "%";
+            }
+        }, 100);
+    });
+
+    function clearText() {
+        document.getElementById("textInput").value = "";
+        progressBar.style.width = "0%";
+        progressText.innerText = "";
+    }
+</script>
+
+</body>
+</html>
