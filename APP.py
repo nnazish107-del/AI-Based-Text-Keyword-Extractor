@@ -1,43 +1,44 @@
-import streamlit as st
+from flask import Flask, render_template, request
 from rake_nltk import Rake
 import nltk
+import time
 
 # Download required NLTK data
 nltk.download("stopwords")
 nltk.download("punkt")
 nltk.download("punkt_tab")
 
-# Page configuration
-st.set_page_config(
-    page_title="AI Text Keyword Extractor",
-    page_icon="🔑",
-    layout="centered"
-)
+app = Flask(__name__)
 
-st.title("🔑 AI-Based Text Keyword Extractor")
-st.write("Enter some text below and I'll extract the most important keywords.")
 
-# Text input
-text = st.text_area(
-    "Enter your text:",
-    height=250,
-    placeholder="Paste or type your text here..."
-)
+@app.route("/", methods=["GET", "POST"])
+def index():
+    keywords = []
+    error = None
 
-# Extract button
-if st.button("Extract Keywords"):
-    if not text.strip():
-        st.error("Please enter some text to extract keywords.")
-    else:
-        with st.spinner("Extracting keywords..."):
+    if request.method == "POST":
+        text = request.form.get("text", "")
+
+        if not text.strip():
+            error = "Please enter some text to extract keywords."
+        else:
+            time.sleep(1)
+
             r = Rake()
             r.extract_keywords_from_text(text)
             keywords = r.get_ranked_phrases()
 
-        if keywords:
-            st.subheader("Extracted Keywords")
+    return render_template(
+        "index.html",
+        keywords=keywords,
+        error=error
+    )
 
-            for keyword in keywords:
-                st.write("🔹", keyword)
-        else:
-            st.warning("No keywords could be extracted.")
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=8501,
+        debug=False,
+        use_reloader=False
+    )
