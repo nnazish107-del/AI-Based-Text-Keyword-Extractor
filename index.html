@@ -1,84 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Keyword Studio</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
+import streamlit as st
+from rake_nltk import Rake
+import nltk
 
+# Download NLTK resources
+@st.cache_resource
+def download_nltk_data():
+    nltk.download("stopwords", quiet=True)
+    nltk.download("punkt", quiet=True)
+    nltk.download("punkt_tab", quiet=True)
+
+download_nltk_data()
+
+st.set_page_config(
+    page_title="Keyword Studio",
+    page_icon="🔑",
+    layout="centered"
+)
+
+# Load CSS
+with open("static/style.css", "r", encoding="utf-8") as f:
+    css = f.read()
+
+st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+# Custom HTML
+st.markdown("""
 <div class="background-bubbles"></div>
 
 <div class="wrapper">
     <div class="card">
         <h1 class="title">Keyword Studio</h1>
-        <p class="subtitle">Transform your text into smart keywords instantly</p>
-
-        <form method="POST" id="keywordForm">
-            <textarea id="textInput" name="text" placeholder="Type your text here..." rows="7"></textarea>
-
-            <div class="button-group">
-                <button type="submit">Extract</button>
-                <button type="button" class="clear-btn" onclick="clearText()">Clear</button>
-            </div>
-        </form>
-
-        <!-- Progress Bar -->
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressText"></div>
-
-        {% if error %}
-            <div class="error-box">
-                {{ error }}
-            </div>
-        {% endif %}
-
-        {% if keywords %}
-            <div class="result-box">
-                <h2>Extracted Keywords</h2>
-                <ul>
-                    {% for keyword in keywords %}
-                        <li>{{ keyword }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <script>
-                document.getElementById("progressBar").style.width = "100%";
-                document.getElementById("progressText").innerText = "Processed ✓";
-            </script>
-        {% endif %}
+        <p class="subtitle">
+            Transform your text into smart keywords instantly
+        </p>
     </div>
 </div>
+""", unsafe_allow_html=True)
 
-<script>
-    const form = document.getElementById("keywordForm");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
+# Text input
+text = st.text_area(
+    "",
+    placeholder="Type your text here...",
+    height=170,
+    label_visibility="collapsed"
+)
 
-    form.addEventListener("submit", function() {
-        progressBar.style.width = "0%";
-        progressText.innerText = "Processing...";
-        let width = 0;
+# Buttons
+col1, col2 = st.columns(2)
 
-        const interval = setInterval(function() {
-            if (width >= 90) {
-                clearInterval(interval);
-            } else {
-                width += 10;
-                progressBar.style.width = width + "%";
-            }
-        }, 100);
-    });
+with col1:
+    extract = st.button("Extract", use_container_width=True)
 
-    function clearText() {
-        document.getElementById("textInput").value = "";
-        progressBar.style.width = "0%";
-        progressText.innerText = "";
-    }
-</script>
+with col2:
+    clear = st.button("Clear", use_container_width=True)
 
-</body>
-</html>
+if clear:
+    st.rerun()
+
+# Keyword extraction
+if extract:
+    if not text.strip():
+        st.error("Please enter some text to extract keywords.")
+    else:
+        with st.spinner("Processing..."):
+            r = Rake()
+            r.extract_keywords_from_text(text)
+            keywords = r.get_ranked_phrases()
+
+        st.markdown(
+            '<div class="result-box">'
+            '<h2>Extracted Keywords</h2>',
+            unsafe_allow_html=True
+        )
+
+        for keyword in keywords:
+            st.markdown(f"<li>{keyword}</li>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
