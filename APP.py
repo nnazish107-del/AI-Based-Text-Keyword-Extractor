@@ -1,41 +1,43 @@
-from flask import Flask, render_template, request
+import streamlit as st
 from rake_nltk import Rake
 import nltk
-import time
 
-# Download required NLTK data (only first time)
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('punkt_tab')
+# Download required NLTK data
+nltk.download("stopwords")
+nltk.download("punkt")
+nltk.download("punkt_tab")
 
-app = Flask(__name__)
+# Page configuration
+st.set_page_config(
+    page_title="AI Text Keyword Extractor",
+    page_icon="🔑",
+    layout="centered"
+)
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    keywords = []
-    error = None
-    loading = False
+st.title("🔑 AI-Based Text Keyword Extractor")
+st.write("Enter some text below and I'll extract the most important keywords.")
 
-    if request.method == "POST":
-        text = request.form.get("text")
+# Text input
+text = st.text_area(
+    "Enter your text:",
+    height=250,
+    placeholder="Paste or type your text here..."
+)
 
-        # Handle empty input
-        if not text or text.strip() == "":
-            error = "Please enter some text to extract keywords."
-        else:
-            loading = True
-            time.sleep(1)  # Simulate loading state
-
-            # Keyword Extraction Logic
+# Extract button
+if st.button("Extract Keywords"):
+    if not text.strip():
+        st.error("Please enter some text to extract keywords.")
+    else:
+        with st.spinner("Extracting keywords..."):
             r = Rake()
             r.extract_keywords_from_text(text)
             keywords = r.get_ranked_phrases()
 
-    return render_template("index.html",
-                           keywords=keywords,
-                           error=error,
-                           loading=loading)
+        if keywords:
+            st.subheader("Extracted Keywords")
 
-if __name__ == "__main__":
-    #app.run(debug=True)
-    app.run(debug=False)
+            for keyword in keywords:
+                st.write("🔹", keyword)
+        else:
+            st.warning("No keywords could be extracted.")
