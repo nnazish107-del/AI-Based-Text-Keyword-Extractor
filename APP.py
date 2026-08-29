@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request
 from rake_nltk import Rake
 import nltk
-import time
-
-# Download required NLTK data
-nltk.download("stopwords")
-nltk.download("punkt")
-nltk.download("punkt_tab")
 
 app = Flask(__name__)
+
+
+# Download NLTK data
+nltk.download("stopwords", quiet=True)
+nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -21,9 +21,8 @@ def index():
 
         if not text.strip():
             error = "Please enter some text to extract keywords."
-        else:
-            time.sleep(1)
 
+        else:
             r = Rake()
             r.extract_keywords_from_text(text)
             keywords = r.get_ranked_phrases()
@@ -36,9 +35,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=8501,
-        debug=False,
-        use_reloader=False
-    )
+    app.run(host="0.0.0.0", port=10000)
